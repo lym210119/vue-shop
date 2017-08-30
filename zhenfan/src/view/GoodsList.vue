@@ -1,7 +1,7 @@
 <template>
   <div>
     <nav-header></nav-header>
-    <nav-bread></nav-bread>
+    <nav-bread>商品</nav-bread>
     <div class="accessory-result-page accessory-page">
       <div class="container">
         <div class="filter-nav">
@@ -53,9 +53,27 @@
             </div>
           </div>
         </div>
+
       </div>
     </div>
     <nav-footer></nav-footer>
+    
+    <!-- 在未登录的情况下 -->
+    <modal :mdShow="mdShow">
+      <p slot="message">请先登录否者无法加入购物车</p>
+      <div slot="btnGroup">
+        <a href="javascript:;" class="btn-login" @click="mdShow = false">关闭</a>
+      </div>
+    </modal>
+
+    <!-- 登录成功的情况下 -->
+    <modal :mdShow="mdShowCart">
+      <p slot="message">加入购物车成功</p>
+      <div slot="btnGroup">
+        <a href="javascript:;" class="btn btn--m" @click="mdShowCart = false">继续购物</a>
+        <router-link class="btn btn--m" to="/cart">查看购物车</router-link>
+      </div>
+    </modal>    
   </div>
 </template>
 
@@ -63,6 +81,7 @@
 import NavHeader from '@/components/Header'
 import NavFooter from '@/components/Footer'
 import NavBread from '@/components/Bread'
+import Modal from '@/components/Modal'
 import axios from 'axios'
 export default {
   name: 'GoodsList',
@@ -75,6 +94,8 @@ export default {
       flag: false,
       page: 1,
       pagesize: 8,
+      mdShow: false,
+      mdShowCart: false,
       priceFilter: [
         {
           startPrice: '0.00',
@@ -98,7 +119,8 @@ export default {
   components: {
     NavHeader,
     NavFooter,
-    NavBread
+    NavBread,
+    Modal
   },
   mounted: function () {
     this.getGoodsList()
@@ -142,18 +164,18 @@ export default {
       setTimeout(() => {
         this.page++
         this.getGoodsList(true)
-        console.log('hahahahahahahah')
       }, 500)
     },
     addCart (productId) {
       axios.post('goods/addCart', {
         productId: productId
-      }).then((res) => {
-        var result = res.data
-        if (result.status === '0') {
-          alert('加入购物车成功')
+      }).then((response) => {
+        var res = response.data
+        if (res.status === '1') {
+          this.mdShow = true
         } else {
-          alert('加入购物车失败')
+          this.mdShowCart = true
+          // alert('加入购物车成功')
         }
       })
     }

@@ -63,7 +63,14 @@ router.get('/list', function (req, res, next) {
 
 // 加入购物车
 router.post('/addCart', function (req, res, next) {
-  let userId = '100000077';
+  if (req.cookies.userId) {
+    var userId = req.cookies.userId;
+  } else {
+    res.json({
+      status: '1',
+      msg: '用户信息不存在'
+    })
+  }
   let productId = req.body.productId;
   var User = require('../models/user');
   // 查询用户Id

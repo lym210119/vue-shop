@@ -18,8 +18,8 @@
           <!--<a href="/" class="navbar-link">我的账户</a>-->
           <span class="navbar-link"></span>
           <span v-text="nickName" v-if="nickName"></span>
-          <a href="javascript:void(0)" class="navbar-link" @click="loginModalFlag = true">登录</a>
-          <a href="javascript:void(0)" class="navbar-link">退出</a>
+          <a href="javascript:void(0)" class="navbar-link" v-if="!nickName" @click="loginModalFlag = true">登录</a>
+          <a href="javascript:void(0)" class="navbar-link" @click="loginOut">退出</a>
           <div class="navbar-cart-container">
             <span class="navbar-cart-count"></span>
             <a class="navbar-link navbar-cart-link" href="/#/cart">
@@ -79,7 +79,18 @@ export default {
       nickName: ''
     }
   },
+  mounted: function () {
+    this.checkLogin()
+  },
   methods: {
+    checkLogin () {
+      axios.get('/users/checkLogin').then((response) => {
+        let res = response.data
+        if (res.status === '0') {
+          this.nickName = res.result
+        }
+      })
+    },
     login () {
       // 需要获取表单的用户名和密码给后端接口
       if (!this.userName || !this.userPwd) {
@@ -90,12 +101,21 @@ export default {
         userName: this.userName,
         userPwd: this.userPwd
       }).then((response) => {
+        console.log(response)
         let res = response.data
         if (res.status === '0') {
           this.loginModalFlag = false
           this.nickName = res.result.userName
         } else {
           this.errorTip = true
+        }
+      })
+    },
+    loginOut () {
+      axios.post('/users/loginOut').then((response) => {
+        let res = response.data
+        if (res.status === '0') {
+          this.nickName = ''
         }
       })
     }
