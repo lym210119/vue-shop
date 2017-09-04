@@ -102,10 +102,12 @@ router.post('/cartEdit', function(req, res, next) {
   let userId = req.cookies.userId;
   productId = req.body.productId;
   productNum = req.body.productNum;
+  checked = req.body.checked;
 
   // 通过userId和cartList.productId确定一件商品来对商品数量的操作
   User.update({"userId": userId, "cartList.productId":productId}, {
-    "cartList.$.productNum": productNum
+    "cartList.$.productNum": productNum,
+    "cartList.$.checked": checked
   }, function(err, doc) {
     if (err) {
       res.json({
@@ -123,6 +125,32 @@ router.post('/cartEdit', function(req, res, next) {
   })
 })
 
+router.post('/cartDel', function(req, res, next) {
+  var userId = req.cookies.userId,productId = req.body.productId;
+  User.update({
+    userId: userId
+  },{
+    $pull: {
+      'cartList': {
+        'productId': productId
+      }
+    }
+  }, function(err, doc) {
+    if (err) {
+      res.json({
+        status: '1',
+        msg: err.message,
+        result: ''
+      })
+    } else {
+      res.json({
+        status: '0',
+        msg: '',
+        result: '商品删除成功'
+      })
+    }
+  })
+})
 router.get('*', function(req, res, next) {
   res.send('hehe')
 })

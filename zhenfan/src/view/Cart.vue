@@ -62,7 +62,7 @@
             <li v-for="item in cartList">
               <div class="cart-tab-1">
                 <div class="cart-item-check">
-                  <a href="javascipt:;" class="checkbox-btn item-check-btn" v-bind:class="{'check':item.checked=='1'}" @click="editCart('checked',item)">
+                  <a href="javascipt:;" class="checkbox-btn item-check-btn" :class="{'checked':item.checked=='1'}" @click="editCart('checked',item)">
                     <svg class="icon icon-ok">
                       <use xlink:href="#icon-ok"></use>
                     </svg>
@@ -94,7 +94,7 @@
               </div>
               <div class="cart-tab-5">
                 <div class="cart-item-opration">
-                  <a href="javascript:;" class="item-edit-btn">
+                  <a href="javascript:;" class="item-edit-btn" @click="delCartConfirm(item.productId)">
                     <svg class="icon icon-del">
                       <use xlink:href="#icon-del"></use>
                     </svg>
@@ -109,8 +109,8 @@
         <div class="cart-foot-inner">
           <div class="cart-foot-l">
             <div class="item-all-check">
-              <a href="javascipt:;">
-                <span class="checkbox-btn item-check-btn">
+              <a href="javascipt:;" @click="toggleCheckAll">
+                <span class="checkbox-btn item-check-btn" :class="{'check': checkAllFlag}">
                   <svg class="icon icon-ok">
                     <use xlink:href="#icon-ok" />
                   </svg>
@@ -122,7 +122,7 @@
           <div class="cart-foot-r">
             <div class="item-total">
               总计:
-              <span class="total-price">500</span>
+              <span class="total-price">{{totalPrice}}</span>
             </div>
             <div class="btn-wrap">
               <a class="btn btn--red">结算</a>
@@ -133,6 +133,15 @@
     </div>
   </div>
   <nav-footer></nav-footer>
+  <modal :mdShow="modalConfirm">
+    <a href="" slot="message">
+      你确定要删除此商品吗？
+    </a>
+    <div slot="btnGroup">
+      <a href="javascript:;" class="btn btn--m" @click="delCart()">确定</a>
+      <a href="javascript:;" class="btn btn--m" @click="modalConfirm = false">关闭</a>
+    </div>
+  </modal>
 </div>
 </template>
 
@@ -147,7 +156,10 @@ export default {
   name: 'cart',
   data () {
     return {
-      cartList: Object
+      cartList: Object,
+      modalConfirm: false,
+      productId: '',
+      checked: ''
     }
   },
   components: {
@@ -155,6 +167,29 @@ export default {
     NavFooter,
     NavBread,
     Modal
+  },
+  computed: {
+    checkAllFlag () {
+      return this.checkedCount === this.cartList.length
+    },
+    checkedCount () {
+      let i = 0
+      this.cartList.forEach((item) => {
+        if (item.checked === '1') {
+          i++
+        }
+      })
+      return i
+    },
+    totalPrice () {
+      let money = 0
+      this.cartList.forEach((item) => {
+        if (item.checked === '1') {
+          money += parseFloat(item.salePrice) * parseInt(item.productNum)
+        }
+      })
+      return money
+    }
   },
   mounted () {
     this.init()
@@ -166,21 +201,48 @@ export default {
         this.cartList = res.result
       })
     },
+    delCartConfirm (productId) {
+      this.modalConfirm = true
+      this.productId = productId
+    },
+    toggleCheckAll () {
+      let flag = !this.checkAllFlag
+      this.cartList.forEach((item) => {
+        item.checked = flag ? 1 : 0
+      })
+
+      axios.post('users/edit')
+    },
+    delCart () {
+      axios.post('users/cartDel', {
+        productId: this.productId
+      }).then((response) => {
+        // let res = response.data
+        this.modalConfirm = false
+        this.init()
+      })
+    },
     editCart (flag, item) {
       if (flag === 'add') {
         item.productNum++
       } else if (flag === 'minu') {
         if (item.productNum <= 1) return
         item.productNum--
+      } else {
+        item.checked = item.checked === '1' ? '0' : '1'
       }
 
       axios.post('/users/cartEdit', {
         productId: item.productId,
-        productNum: item.productNum
+        productNum: item.productNum,
+        checked: item.checked
       }).then((response) => {
         let res = response.data
         console.log(res)
       })
+    },
+    checkeds () {
+      this.checked = 1
     }
   }
 }
